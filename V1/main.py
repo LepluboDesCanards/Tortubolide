@@ -5,9 +5,16 @@ class Vecteur:
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
-    def __add__(self, other): return Vecteur(self.x + other.x, self.y + other.y)
-    def __sub__(self, other): return Vecteur(self.x - other.x, self.y - other.y)
-    def __iter__(self): return iter((self.x, self.y))
+
+    def __add__(self, other):
+        return Vecteur(self.x + other.x, self.y + other.y)
+    
+    def __sub__(self, other):
+        return Vecteur(self.x - other.x, self.y - other.y)
+    
+    def __iter__(self):
+        return iter((self.x, self.y))
+
 
 class Tortubolide:
     def __init__(self, pos: Vecteur, body: turtle.Turtle, jeu, nom="Joueur", is_bot=False, comportement=None):
@@ -28,21 +35,30 @@ class Tortubolide:
         self.body.pendown()
         self.body.stamp()
 
+
     def simuler_deplacement(self, v_actuelle, acceleration):
         v_test = v_actuelle + acceleration
         derniere_pos = self.pos
-        # On calcule les pas pour tester chaque case du trajet
+        
+
         pas_x = 1 if v_test.x > 0 else -1 if v_test.x < 0 else 0
         pas_y = 1 if v_test.y > 0 else -1 if v_test.y < 0 else 0
         nb_etapes = max(abs(v_test.x), abs(v_test.y))
         
+
         for i in range(1, nb_etapes + 1):
             ix = self.pos.x + (i * pas_x if i <= abs(v_test.x) else v_test.x)
             iy = self.pos.y + (i * pas_y if i <= abs(v_test.y) else v_test.y)
+
             test_pos = Vecteur(int(ix), int(iy))
-            if self.jeu.est_mur(test_pos): return derniere_pos, True
+
+            if self.jeu.est_mur(test_pos):
+                return derniere_pos, True
+            
             derniere_pos = test_pos
+
         return derniere_pos, False
+
 
     def action(self, acc: Vecteur):
         
@@ -53,11 +69,10 @@ class Tortubolide:
         nouvelle_pos, collision = self.simuler_deplacement(self.speed, acc)
         
         if collision:
-           
             self.pos = nouvelle_pos
             self.speed = Vecteur(0, 0)
+
         else:
-            
             self.speed += acc
             self.pos = nouvelle_pos
             
@@ -77,6 +92,7 @@ def comportement_full_send(bot):
     """Bot qui cherche juste à aller vite, quitte à taper les murs."""
     return Vecteur(random.randint(-1, 1), random.randint(-1, 1))
 
+
 def comportement_prudent(bot):
     """Bot qui teste les 9 possibilités et choisit une qui ne cogne pas."""
     possibilites = [Vecteur(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]]
@@ -90,9 +106,11 @@ def comportement_prudent(bot):
 
 class Jeu:
     def __init__(self, map_path):
+
         self.screen = turtle.Screen()
         self.screen.tracer(0)
         self.taille_case = 20
+
         self.grille = []
         with open(map_path, 'r') as f:
             for ligne in f: self.grille.append(list(ligne.strip('\n')))
@@ -106,6 +124,7 @@ class Jeu:
         start_pos = self.trouver_depart()
         self.participants = [
             Tortubolide(start_pos, self.creer_tortue("green"), self, "Joueur 1", is_bot=False),
+            #Tortubolide(start_pos, self.creer_tortue("red"), self, "Joueur 2", is_bot=False),
             Tortubolide(start_pos, self.creer_tortue("orange"), self, "Robot Prudent", is_bot=True, comportement=comportement_prudent),
             Tortubolide(start_pos, self.creer_tortue("blue"), self, "Robot Fou", is_bot=True, comportement=comportement_full_send)
         ]
