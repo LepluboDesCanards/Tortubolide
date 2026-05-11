@@ -18,6 +18,7 @@ class Vecteur:
 
 class Tortubolide:
     def __init__(self, pos: Vecteur, body: turtle.Turtle, jeu, nom="Joueur", is_bot=False, comportement=None):
+        
         self.pos = pos
         self.body = body
         self.jeu = jeu
@@ -89,14 +90,14 @@ class Tortubolide:
 
 
 def comportement_full_send(bot):
-    """Bot qui cherche juste à aller vite, quitte à taper les murs."""
     return Vecteur(random.randint(-1, 1), random.randint(-1, 1))
 
 
 def comportement_prudent(bot):
-    """Bot qui teste les 9 possibilités et choisit une qui ne cogne pas."""
+
     possibilites = [Vecteur(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]]
     random.shuffle(possibilites)
+
     for acc in possibilites:
         _, collision = bot.simuler_deplacement(bot.speed, acc)
         if not collision:
@@ -119,7 +120,9 @@ class Jeu:
         self.largeur = max(len(row) for row in self.grille)
         self.dessiner_circuit()
         
-        self.fantome = turtle.Turtle(); self.fantome.hideturtle(); self.fantome.penup()
+        self.fantome = turtle.Turtle()
+        self.fantome.hideturtle()
+        self.fantome.penup()
         
         start_pos = self.trouver_depart()
         self.participants = [
@@ -133,11 +136,13 @@ class Jeu:
         self.setup_controles()
         self.actualiser_cycle()
 
+
     def creer_tortue(self, couleur):
         t = turtle.Turtle()
         t.shape("turtle")
         t.color(couleur)
         return t
+
 
     def actualiser_cycle(self):
         p = self.participants[self.index_courant]
@@ -153,8 +158,8 @@ class Jeu:
             acc = p.comportement(p)
             self.screen.ontimer(lambda: self.executer_tour(acc), 400)
         else:
-            
             self.afficher_projections(p)
+
 
     def executer_tour(self, acc: Vecteur):
         p = self.participants[self.index_courant]
@@ -163,37 +168,50 @@ class Jeu:
         self.screen.update()
         self.actualiser_cycle()
 
+
     def afficher_projections(self, p):
         self.screen.tracer(0)
         self.fantome.clear()
+
         touches = {'z':Vecteur(0,-1), 'x':Vecteur(0,1), 'q':Vecteur(-1,0), 'd':Vecteur(1,0), 's':Vecteur(0,0)}
+
         for k, acc in touches.items():
+
             dest, col = p.simuler_deplacement(p.speed, acc)
+
             self.fantome.goto(self.convert_coords(dest))
             self.fantome.dot(8, "red" if col else "royalblue")
             self.fantome.write(f" {k}", font=("Arial", 8, "bold"))
+
         self.screen.update()
         self.screen.tracer(1)
 
 
     def trouver_depart(self):
+
         for y, ligne in enumerate(self.grille):
             for x, case in enumerate(ligne):
                 if case == '0': return Vecteur(x, y)
+
         return Vecteur(1, 1)
+
 
     def convert_coords(self, v):
         return ((v.x - self.largeur/2)*self.taille_case, (self.hauteur/2 - v.y)*self.taille_case)
+
 
     def get_case(self, v):
         if 0 <= v.y < self.hauteur and 0 <= v.x < len(self.grille[int(v.y)]):
             return self.grille[int(v.y)][int(v.x)]
         return '#'
 
+
     def est_mur(self, v): return self.get_case(v) == '#'
+
 
     def dessiner_circuit(self):
         c = turtle.Turtle(); c.penup(); c.hideturtle()
+
         for y, ligne in enumerate(self.grille):
             for x, case in enumerate(ligne):
                 if case in ('#', '0'):
@@ -201,16 +219,16 @@ class Jeu:
                     c.color("black" if case == '#' else "red")
                     c.dot(self.taille_case - 2)
 
+
     def setup_controles(self):
+
         self.screen.listen()
-        def callback(acc):
-            if not self.participants[self.index_courant].is_bot:
-                self.executer_tour(acc)
-        self.screen.onkey(lambda: callback(Vecteur(0,-1)), "z")
-        self.screen.onkey(lambda: callback(Vecteur(0,1)), "x")
-        self.screen.onkey(lambda: callback(Vecteur(-1,0)), "q")
-        self.screen.onkey(lambda: callback(Vecteur(1,0)), "d")
-        self.screen.onkey(lambda: callback(Vecteur(0,0)), "s")
+
+        self.screen.onkey(lambda: self.executer_tour(Vecteur(0,-1)) if not self.participants[self.index_courant].is_bot else (), "z")
+        self.screen.onkey(lambda: self.executer_tour(Vecteur(0,1)) if not self.participants[self.index_courant].is_bot else (), "x")
+        self.screen.onkey(lambda: self.executer_tour(Vecteur(-1,0)) if not self.participants[self.index_courant].is_bot else (), "q")
+        self.screen.onkey(lambda: self.executer_tour(Vecteur(1,0)) if not self.participants[self.index_courant].is_bot else (), "d")
+        self.screen.onkey(lambda: self.executer_tour(Vecteur(0,0)) if not self.participants[self.index_courant].is_bot else (), "s")
 
 if __name__ == "__main__":
     jeu = Jeu("./V1/maps/dev.tmap")
